@@ -8,7 +8,8 @@ SUPPORTED_PYTHON_VERSIONS := \
     2.7 \
     3.3 \
     3.4 \
-    3.5
+    3.5 \
+    3.6
 
 # FreeTDS versions to test against. This should
 # be the latest of each minor release.
@@ -35,7 +36,7 @@ PYTHON_VERSIONS := $(strip $(foreach V, $(SUPPORTED_PYTHON_VERSIONS), $(call CHE
 DEFAULT_PYTHON_VERSION := $(lastword $(PYTHON_VERSIONS))
 
 ifndef VIRTUALENV
-    VIRTUALENV = python -m virtualenv
+    VIRTUALENV = python$(strip $(1)) -m $(if $(findstring 3.,$(strip $(1))),venv,virtualenv)
 endif
 
 VALGRIND_FLAGS := \
@@ -117,8 +118,9 @@ define ENV_RULE
 ENV_$(strip $(1))_BUILD := $(BUILD_DIR)/$(strip $(1)).build
 
 $$(ENV_$(strip $(1))_BUILD): freetds-$(strip $(3))
-	$$(VIRTUALENV) -p python$(strip $(2)) $(BUILD_DIR)/$(strip $(1))
+	$$(call VIRTUALENV, $(2)) $(BUILD_DIR)/$(strip $(1))
 	$(call ENV_PIP, $(1)) install --upgrade pip
+	$(call ENV_PIP, $(1)) install setuptools --no-binary :all: --upgrade
 	$(if $(strip $(4)),$(call ENV_PIP, $(1)) install $(strip $(4)))
 	touch $$@
 
@@ -142,8 +144,8 @@ endef
 #   Usage: ENV_PYTHON(env_name)
 ENV_PYTHON = $(abspath $(BUILD_DIR)/$(strip $(1))/bin/python) -E
 
-# Function to generate an environment rule's python interpreter.
-#   Usage: ENV_PYTHON(env_name)
+# Function to generate an environment rule's coverage script.
+#   Usage: ENV_COVERAGE(env_name)
 ENV_COVERAGE = $(abspath $(BUILD_DIR)/$(strip $(1))/bin/coverage)
 
 # Function to generate an environment rule's pip utility.
@@ -155,15 +157,15 @@ ENV_PIP = $(ENV_PYTHON) $(BUILD_DIR)/$(strip $(1))/bin/pip
 # Function to install ctds into a virtualenv.
 #   Usage: INSTALL_CTDS(env_name, <freetds_version>, <additional_args>)
 define INSTALL_CTDS
-	$(call ENV_PIP, $(1)) install -v -e . $(strip $(3)) \
-        --global-option=build_ext \
-        --global-option="-t$(BUILD_DIR)/$(strip $(1))" \
-        --global-option=build_ext \
-        --global-option="-I$(call FREETDS_INCLUDE, $(strip $(2)))" \
-        --global-option=build_ext \
-        --global-option="-L$(call FREETDS_LIB, $(strip $(2)))" \
-        --global-option=build_ext --global-option="-R$(call FREETDS_LIB, $(strip $(2)))" \
-        --global-option=build_ext --global-option="-f"
+$(call ENV_PIP, $(1)) install -v -e . $(strip $(3)) \
+    --global-option=build_ext \
+    --global-option="-t$(BUILD_DIR)/$(strip $(1))" \
+    --global-option=build_ext \
+    --global-option="-I$(call FREETDS_INCLUDE, $(strip $(2)))" \
+    --global-option=build_ext \
+    --global-option="-L$(call FREETDS_LIB, $(strip $(2)))" \
+    --global-option=build_ext --global-option="-R$(call FREETDS_LIB, $(strip $(2)))" \
+    --global-option=build_ext --global-option="-f"
 endef
 
 define TEST_COMMANDS
