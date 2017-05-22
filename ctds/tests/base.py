@@ -63,7 +63,8 @@ class TestExternalDatabase(unittest.TestCase):
 
     @property
     def server_name_and_instance(self):
-        server = self.get_option('server')
+        # Strip the domain
+        server = self.get_option('server').split(".")[0]
         instance = self.get_option('instance')
         if instance is not None: # pragma: nocover
             server += '\\' + instance
@@ -77,6 +78,7 @@ class TestExternalDatabase(unittest.TestCase):
             [
                 (key, self.get_option(key, type_))
                 for key, type_ in (
+                    ('port', int),
                     ('autocommit', bool),
                     ('database', str),
                     ('instance', str),

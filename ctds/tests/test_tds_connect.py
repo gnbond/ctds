@@ -154,6 +154,7 @@ Connect to a database.
         try:
             ctds.connect(
                 host,
+                port=self.get_option('port', int),
                 login_timeout=1,
                 tds_version='7.1'
             )
@@ -183,6 +184,7 @@ Connect to a database.
             try:
                 ctds.connect(
                     self.get_option('server'),
+                    port=self.get_option('port', int),
                     user=username,
                     password=password,
                     tds_version='7.1'
