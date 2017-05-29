@@ -1531,7 +1531,7 @@ PyObject* Connection_create(const char* server, uint16_t port, const char* insta
             /* Determine the maximum size the server connection string may require. */
             size_t nservername = strlen(server) +
                 STRLEN(STRINGIFY(UINT16_MAX)) /* maximum port number length */ +
-                ((instance) ? (strlen(instance) + 1 /* for '\\' */) : 0) +
+                ((instance) ? (strlen(instance) + 1 /* for '\\' */) : 1 /* for ':' */) +
                 1 /* for '\0' */;
 
             servername = (char*)tds_mem_malloc(nservername);
